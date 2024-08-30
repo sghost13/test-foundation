@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../index.ts"],
+  "sourcesContent": ["import { Handler } from \"aws-lambda\";\n\n// This hello lambda only exists only to show how to deploy a lambda function using the esbuild config\n// See the esbuild.config.ts file for more details\n// See the actions workflow for more details\n\n// Handler function\nexport const handler: Handler = async (\n  event: any\n): Promise<{ message: string }> => {\n  return {\n    message: \"Hello, Hightower!\",\n  };\n};\n"],
+  "mappings": "yaAAA,IAAAA,EAAA,GAAAC,EAAAD,EAAA,aAAAE,IAAA,eAAAC,EAAAH,GAOO,IAAME,EAAmB,MAC9BE,IAEO,CACL,QAAS,mBACX",
+  "names": ["hello_exports", "__export", "handler", "__toCommonJS", "event"]
+}

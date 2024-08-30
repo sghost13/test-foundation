@@ -1,0 +1,58 @@
+name: Deploy hello lambda
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "AWS environment to deploy to"
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-hello-lambda:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v4
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      
+      - name: Install Dependencies
+        run: npm ci
+        if: steps.cache.outputs.cache-hit != 'true'
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActions"
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      # This step will change dependent on the cdk NodejsFunction deploy configuration in the cdk code.
+      # It must match. (NodeJsFunction cdk function uses esbuild under the hood)
+      - name: build-artifacts
+        run: |
+          mkdir ./hello
+          npx esbuild ./lambda/hello.ts --bundle --platform=node --target=node18 --outdir=./hello
+          zip -r ./hello.zip ./hello
+
+      # Upload zip lambda artifact to our s3 bucket
+      # Once in the bucket our lambdaDeployer lambda will handle the rest
+      - name: Upload artifacts to S3
+        run: |
+          aws s3 cp ./hello.zip s3://lambda-holding-bucket/hello.zip

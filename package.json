@@ -1,0 +1,41 @@
+{
+  "name": "test-foundation",
+  "version": "0.1.0",
+  "bin": {
+    "test-foundation": "bin/test-foundation.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:hello": "ts-node ./lambda/hello/esbuild.config.ts && cd ./lambda/hello/dist && zip -r hello.zip ./*",
+    "build:hello2": "ts-node ./lambda/hello/esbuild.config.ts && cd ./lambda/hello/dist && zip -r hello2.zip ./*",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.143",
+    "@types/aws-sdk": "^0.0.42",
+    "@types/jest": "^29.5.12",
+    "@types/node": "20.14.9",
+    "@types/unzipper": "^0.10.10",
+    "aws-cdk": "2.150.0",
+    "esbuild": "^0.23.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.5",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.5.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.632.0",
+    "@aws-sdk/client-lambda": "^3.624.0",
+    "@aws-sdk/client-s3": "^3.627.0",
+    "@aws-sdk/client-sts": "^3.624.0",
+    "@types/mime-types": "^2.1.4",
+    "aws-cdk-lib": "2.150.0",
+    "aws-sdk": "^2.1672.0",
+    "constructs": "^10.0.0",
+    "mime-types": "^2.1.35",
+    "source-map-support": "^0.5.21",
+    "unzipper": "^0.12.3"
+  }
+}

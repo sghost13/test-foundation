@@ -1,0 +1,12 @@
+{
+  "functionName": "template-lambda",
+  "handler": "index.handler",
+  "runtime": "NODEJS_18_X",
+  "s3Key": "template-lambda.zip",
+  "description": "This template lambda is disabled, and will not be deployed.",
+  "memorySize": 128,
+  "environment": {
+    "NODE_ENV": "example",
+    "API_ENDPOINT": "https://api.example.com"
+  }
+}

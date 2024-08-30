@@ -1,0 +1,10 @@
+{
+  "functionName": "hello",
+  "handler": "index.handler",
+  "runtime": "NODEJS_18_X",
+  "s3Key": "hello.zip",
+  "description": "This hello lambda is an example.",
+  "memorySize": 128,
+  "environment": {
+  }
+}
