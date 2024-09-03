@@ -25,7 +25,6 @@ export class CloudfrontManagerStack extends Stack {
     super(scope, id, props);
 
     // S3 bucket to hold artifacts for CloudFront and app code artifacts
-    // The bucket will be auto-deleted when the stack is destroyed.
     const cloudfrontArtifactBucket = new Bucket(
       this,
       "sg-cloudfront-artifact-bucket",
