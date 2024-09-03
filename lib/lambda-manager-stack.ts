@@ -85,7 +85,8 @@ export class LambdaManagerStack extends Stack {
     // Notify the lambda-updater Lambda when a new artifact is uploaded to the bucket
     lambdaArtifactBucket.addEventNotification(
       EventType.OBJECT_CREATED,
-      new LambdaDestination(lambdaUpdater)
+      new LambdaDestination(lambdaUpdater),
+      { suffix: ".zip" }
     );
   }
 }
