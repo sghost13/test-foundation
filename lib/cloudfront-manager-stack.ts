@@ -17,14 +17,15 @@ import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
 import { resolve } from "path";
 
-// Cloudfront Manager Stack
-// This stack's purpose is to deploy *all* CloudFront distributions
+// CloudfrontManagerStack: A CDK stack that deploys CloudFront distributions
+// and their associated resources such as S3 buckets and Lambda functions.
 
 export class CloudfrontManagerStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // S3 bucket to hold CloudFront artifacts as well as app code artifacts for cloudfront to serve
+    // S3 bucket to hold artifacts for CloudFront and app code artifacts
+    // The bucket will be auto-deleted when the stack is destroyed.
     const cloudfrontArtifactBucket = new Bucket(
       this,
       "sg-cloudfront-artifact-bucket",
@@ -36,7 +37,7 @@ export class CloudfrontManagerStack extends Stack {
       }
     );
 
-    // Create an Origin Access Identity (OAI) for CloudFront
+    // Create an Origin Access Identity (OAI) for secure access from CloudFront to S3.
     const originAccessIdentity = new OriginAccessIdentity(
       this,
       "cloudfront-updater-oai",
@@ -45,10 +46,10 @@ export class CloudfrontManagerStack extends Stack {
       }
     );
 
-    // Grant read permissions to CloudFront OAI
+    // Grant read permissions to CloudFront's OAI for accessing S3 objects.
     cloudfrontArtifactBucket.addToResourcePolicy(
       new PolicyStatement({
-        actions: ["s3:GetObject"], // Allow CloudFront to get objects from the bucket
+        actions: ["s3:GetObject"], // Allow CloudFront to retrieve objects.
         resources: [cloudfrontArtifactBucket.arnForObjects("*")],
         principals: [
           new CanonicalUserPrincipal(
@@ -58,7 +59,7 @@ export class CloudfrontManagerStack extends Stack {
       })
     );
 
-    // Create CloudFront distribution with OAI
+    // Create CloudFront distribution configured to serve content from S3.
     const app1Distribution = new Distribution(this, "app1-distribution", {
       defaultRootObject: "index.html",
       defaultBehavior: {
@@ -69,10 +70,11 @@ export class CloudfrontManagerStack extends Stack {
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         compress: true,
       },
-      comment: "app1", // Needs to match the originPath and zip file name for the cloudfront-updater lambda to work
+      comment: "app1", // Used for identifying the distribution, should match the originPath and zip file name.
     });
 
-    // Deploy the cloudfront-updater Lambda
+    // Deploy the cloudfront-updater Lambda function
+    // This Lambda handles S3 events and CloudFront invalidations.
     const cloudfrontUpdater = new NodejsFunction(this, "cloudfront-updater", {
       functionName: "cloudfront-updater",
       runtime: Runtime.NODEJS_18_X,
@@ -90,29 +92,31 @@ export class CloudfrontManagerStack extends Stack {
       },
     });
 
-    // Grant permissions needed by the cloudfront-updater Lambda
+    // Attach an inline policy to the Lambda role
+    // Allows the Lambda to list distributions and create invalidations.
     cloudfrontUpdater.role?.attachInlinePolicy(
       new Policy(this, "lambda-updater-policy", {
         statements: [
           new PolicyStatement({
             actions: [
-              "cloudfront:ListDistributions", // Allow listing all distributions
-              "cloudfront:CreateInvalidation", // Allow creating cache invalidations
+              "cloudfront:ListDistributions", // Allow listing all CloudFront distributions.
+              "cloudfront:CreateInvalidation", // Allow cache invalidation requests.
             ],
-            resources: ["*"],
+            resources: ["*"], // Permissions apply to all resources.
           }),
         ],
       })
     );
 
-    // Grant read/write access to the cloudfront-updater Lambda
+    // Grant the Lambda read/write access to the S3 bucket.
     cloudfrontArtifactBucket.grantReadWrite(cloudfrontUpdater);
 
-    // S3 event notification to trigger the cloudfront-updater Lambda
+    // Set up an S3 event notification to trigger the Lambda
+    // Triggers only on the creation of .zip files in the "zip/" directory.
     cloudfrontArtifactBucket.addEventNotification(
       EventType.OBJECT_CREATED,
       new LambdaDestination(cloudfrontUpdater),
-      { suffix: ".zip", prefix: "zip/" } // Trigger only for .zip files in the "zip/" folder
+      { suffix: ".zip", prefix: "zip/" }
     );
   }
 }

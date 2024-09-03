@@ -8,14 +8,12 @@ import { NodejsFunction, SourceMapMode } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
 import { resolve } from "path";
 
-// Lambda Manager Stack
-// This stacks purpose is to deploy and update *all* -application- lambdas
-
+// Stack to manage deployment and updating of all application Lambdas
 export class LambdaManagerStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // Create a bucket to hold the lambda artifacts
+    // S3 bucket to store Lambda artifacts
     const lambdaArtifactBucket = new Bucket(this, "lambda-artifact-bucket", {
       bucketName: "sg-lambda-artifact-bucket",
       removalPolicy: RemovalPolicy.DESTROY,
@@ -23,13 +21,11 @@ export class LambdaManagerStack extends Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     });
 
-    // Create the lambdas from configuration files, passing the lambda-artifact-bucket reference
+    // Deploy application Lambdas based on configuration files
     LambdaDeployer.deployLambdas(this, lambdaArtifactBucket);
 
     // Deploy the lambda-updater function
-    // See the ../lambda/lambda-updater/index.ts file for more details
-    // The lambda-updater lambda is part of the foundational ci cd infrastructure
-    // Uses the NodejsFunction to create the lambda, so the bundle step is included in the cdk code below
+    // This Lambda is part of the CI/CD infrastructure and is used to update other Lambdas
     const lambdaUpdater = new NodejsFunction(this, "lambda-updater", {
       functionName: "lambda-updater",
       runtime: Runtime.NODEJS_18_X,
@@ -49,7 +45,7 @@ export class LambdaManagerStack extends Stack {
       },
     });
 
-    // DELETE THIS
+    // Example function; remove if not needed
     const hello2 = new NodejsFunction(this, "hello2", {
       functionName: "hello2",
       runtime: Runtime.NODEJS_18_X,
@@ -64,30 +60,29 @@ export class LambdaManagerStack extends Stack {
         target: "node18",
       },
     });
-    // END DELETE THIS
+    // END Example function
 
-    // Grant the lambdaUpdater lambda role a policy to allow it to update lambda code
-    // AWS automatically creates a role for lambdas to assume, we just want to add policy permissions to it
+    // Grant necessary permissions to the lambda-updater function
     lambdaUpdater.role?.attachInlinePolicy(
       new Policy(this, "lambda-updater-policy", {
         statements: [
           new PolicyStatement({
             actions: [
-              "lambda:UpdateFunctionCode", // Allow updating Lambda code
-              "lambda:ListFunctions", // Allow listing all functions in the account
+              "lambda:UpdateFunctionCode", // Allow updating Lambda function code
+              "lambda:ListFunctions", // Allow listing all Lambda functions in the account
             ],
             resources: [
-              `arn:aws:lambda:${this.region}:${this.account}:function:*`, // Restrict to functions in this account and region
+              `arn:aws:lambda:${this.region}:${this.account}:function:*`, // Restrict to functions within this account and region
             ],
           }),
         ],
       })
     );
 
-    // Grant the lambdaUpdater lambda read access to the lambda-artifact-bucket
+    // Grant read access to the lambda-updater Lambda for the artifact bucket
     lambdaArtifactBucket.grantRead(lambdaUpdater);
 
-    // Add an event notification to the lambda-artifact-bucket, that alerts the lambdaUpdater lambda when a lambda artifact is updated
+    // Notify the lambda-updater Lambda when a new artifact is uploaded to the bucket
     lambdaArtifactBucket.addEventNotification(
       EventType.OBJECT_CREATED,
       new LambdaDestination(lambdaUpdater)
