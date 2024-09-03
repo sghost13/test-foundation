@@ -14,8 +14,8 @@ interface LambdaConfig {
   environment?: { [key: string]: string };
 }
 
-export class LambdaCreator {
-  static createLambdas(scope: Construct, lambdaArtifactBucket: IBucket) {
+export class LambdaDeployer {
+  static deployLambdas(scope: Construct, lambdaArtifactBucket: IBucket) {
     const configDir = path.resolve(__dirname, "../config/lambda/");
     const files = fs
       .readdirSync(configDir)

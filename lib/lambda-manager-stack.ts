@@ -1,5 +1,5 @@
 import { BlockPublicAccess, Bucket, EventType } from "aws-cdk-lib/aws-s3";
-import { LambdaCreator } from "../useCase/lambdaCreator";
+import { LambdaDeployer } from "../useCase/lambdaDeployer";
 import { RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
@@ -24,7 +24,7 @@ export class LambdaManagerStack extends Stack {
     });
 
     // Create the lambdas from configuration files, passing the lambda-artifact-bucket reference
-    LambdaCreator.createLambdas(this, lambdaArtifactBucket);
+    LambdaDeployer.deployLambdas(this, lambdaArtifactBucket);
 
     // Deploy the lambda-updater function
     // See the ../lambda/lambda-updater/index.ts file for more details
