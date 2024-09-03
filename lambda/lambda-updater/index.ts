@@ -13,7 +13,7 @@ import { Readable } from "stream";
 import { Buffer } from "buffer";
 import { finished } from "stream/promises";
 
-const region = process.env.AWS_REGION; // Centralize region configuration for AWS clients
+const region = process.env.AWS_REGION;
 const s3Client = new S3Client({ region });
 const lambdaClient = new LambdaClient({ region });
 

@@ -16,13 +16,9 @@ import { Readable } from "stream";
 import { Parse } from "unzipper";
 import { lookup } from "mime-types";
 
-// Initialize S3 client with the region from environment variables
-const s3Client = new S3Client({ region: process.env.AWS_REGION });
-
-// Initialize CloudFront client with the region from environment variables
-const cloudFrontClient = new CloudFrontClient({
-  region: process.env.AWS_REGION,
-});
+const region = process.env.AWS_REGION;
+const s3Client = new S3Client({ region });
+const cloudFrontClient = new CloudFrontClient({ region });
 
 /**
  * AWS Lambda handler function for processing S3 events related to CloudFront updates.
