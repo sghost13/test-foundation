@@ -6,7 +6,7 @@ import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { NodejsFunction, SourceMapMode } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
-import * as path from "path";
+import { resolve } from "path";
 
 // Lambda Manager Stack
 // This stacks purpose is to deploy and update *all* -application- lambdas
@@ -33,7 +33,7 @@ export class LambdaManagerStack extends Stack {
     const lambdaUpdater = new NodejsFunction(this, "lambda-updater", {
       functionName: "lambda-updater",
       runtime: Runtime.NODEJS_18_X,
-      entry: path.resolve(__dirname, "../lambda/lambda-updater/index.ts"),
+      entry: resolve(__dirname, "../lambda/lambda-updater/index.ts"),
       handler: "index.handler",
       memorySize: 1024,
       environment: {
@@ -53,7 +53,7 @@ export class LambdaManagerStack extends Stack {
     const hello2 = new NodejsFunction(this, "hello2", {
       functionName: "hello2",
       runtime: Runtime.NODEJS_18_X,
-      entry: path.resolve(__dirname, "../lambda/hello/index.ts"),
+      entry: resolve(__dirname, "../lambda/hello/index.ts"),
       handler: "index.handler",
       environment: {},
       bundling: {

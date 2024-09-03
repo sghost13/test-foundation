@@ -15,7 +15,7 @@ import { NodejsFunction, SourceMapMode } from "aws-cdk-lib/aws-lambda-nodejs";
 import { BlockPublicAccess, Bucket, EventType } from "aws-cdk-lib/aws-s3";
 import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
-import path = require("path");
+import { resolve } from "path";
 
 // Cloudfront Manager Stack
 // This stack's purpose is to deploy *all* CloudFront distributions
@@ -76,7 +76,7 @@ export class CloudfrontManagerStack extends Stack {
     const cloudfrontUpdater = new NodejsFunction(this, "cloudfront-updater", {
       functionName: "cloudfront-updater",
       runtime: Runtime.NODEJS_18_X,
-      entry: path.resolve(__dirname, "../lambda/cloudfront-updater/index.ts"),
+      entry: resolve(__dirname, "../lambda/cloudfront-updater/index.ts"),
       handler: "index.handler",
       memorySize: 1024,
       environment: {},
