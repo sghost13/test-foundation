@@ -18,50 +18,6 @@ const s3Client = new S3Client({ region });
 const lambdaClient = new LambdaClient({ region });
 
 /**
- * Converts a readable stream into a buffer.
- *
- * @param {Readable} stream - The readable stream to be converted.
- * @returns {Promise<Buffer>} A promise that resolves to the buffered content of the stream.
- * @throws Will throw an error if there is an issue converting the stream to a buffer.
- */
-const convertStreamToBuffer = async (stream: Readable): Promise<Buffer> => {
-  const chunks: Buffer[] = [];
-  try {
-    for await (const chunk of stream) {
-      chunks.push(Buffer.from(chunk)); // Convert each chunk to a Buffer
-    }
-    await finished(stream); // Ensure the stream is fully consumed and closed
-  } catch (error) {
-    console.error("Error converting stream to buffer:", error);
-    throw error; // Rethrow the error to be handled by the calling function
-  }
-  return Buffer.concat(chunks); // Combine all chunks into a single Buffer
-};
-
-/**
- * Updates the code of a specified Lambda function.
- *
- * @param {string} functionName - The name of the Lambda function to update.
- * @param {Buffer} lambdaCodeBuffer - The new code for the Lambda function as a zipped buffer.
- * @returns {Promise<void>} A promise that resolves when the Lambda function is successfully updated.
- * @throws Will throw an error if there is an issue with updating the Lambda function code.
- */
-const updateLambdaFunctionCode = async (
-  functionName: string,
-  lambdaCodeBuffer: Buffer
-): Promise<void> => {
-  const updateFunctionCodeParams: UpdateFunctionCodeCommandInput = {
-    FunctionName: functionName, // Name of the Lambda function to update
-    ZipFile: lambdaCodeBuffer, // Lambda function code as a zipped buffer
-  };
-
-  await lambdaClient.send(
-    new UpdateFunctionCodeCommand(updateFunctionCodeParams)
-  );
-  console.log(`Lambda function ${functionName} updated successfully.`);
-};
-
-/**
  * AWS Lambda handler function to process S3 events and update Lambda functions.
  *
  * @param {S3Event} event - The S3 event that triggered the Lambda function.
@@ -122,4 +78,48 @@ export const handler = async (
     }
     throw err; // Rethrow the error to ensure the Lambda reports the failure
   }
+};
+
+/**
+ * Converts a readable stream into a buffer.
+ *
+ * @param {Readable} stream - The readable stream to be converted.
+ * @returns {Promise<Buffer>} A promise that resolves to the buffered content of the stream.
+ * @throws Will throw an error if there is an issue converting the stream to a buffer.
+ */
+const convertStreamToBuffer = async (stream: Readable): Promise<Buffer> => {
+  const chunks: Buffer[] = [];
+  try {
+    for await (const chunk of stream) {
+      chunks.push(Buffer.from(chunk)); // Convert each chunk to a Buffer
+    }
+    await finished(stream); // Ensure the stream is fully consumed and closed
+  } catch (error) {
+    console.error("Error converting stream to buffer:", error);
+    throw error; // Rethrow the error to be handled by the calling function
+  }
+  return Buffer.concat(chunks); // Combine all chunks into a single Buffer
+};
+
+/**
+ * Updates the code of a specified Lambda function.
+ *
+ * @param {string} functionName - The name of the Lambda function to update.
+ * @param {Buffer} lambdaCodeBuffer - The new code for the Lambda function as a zipped buffer.
+ * @returns {Promise<void>} A promise that resolves when the Lambda function is successfully updated.
+ * @throws Will throw an error if there is an issue with updating the Lambda function code.
+ */
+const updateLambdaFunctionCode = async (
+  functionName: string,
+  lambdaCodeBuffer: Buffer
+): Promise<void> => {
+  const updateFunctionCodeParams: UpdateFunctionCodeCommandInput = {
+    FunctionName: functionName, // Name of the Lambda function to update
+    ZipFile: lambdaCodeBuffer, // Lambda function code as a zipped buffer
+  };
+
+  await lambdaClient.send(
+    new UpdateFunctionCodeCommand(updateFunctionCodeParams)
+  );
+  console.log(`Lambda function ${functionName} updated successfully.`);
 };
