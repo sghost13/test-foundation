@@ -1,8 +1,11 @@
-import * as path from "path";
-import * as fs from "fs";
+import { join, resolve } from "path";
+import { readdirSync, readFileSync } from "fs";
 import { Construct } from "constructs";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
 import { IBucket } from "aws-cdk-lib/aws-s3";
+import { Vpc, SecurityGroup, ISecurityGroup } from "aws-cdk-lib/aws-ec2";
+import { Role, IRole } from "aws-cdk-lib/aws-iam";
+import { Duration } from "aws-cdk-lib";
 
 // Interface for Lambda configuration, used to type-check the JSON config files.
 interface LambdaConfig {
@@ -13,6 +16,11 @@ interface LambdaConfig {
   description?: string;
   memorySize?: number;
   environment?: { [key: string]: string };
+  timeout?: number;
+  vpc?: string;
+  securityGroups?: string[];
+  roleArn?: string;
+  logRetention?: number;
 }
 
 export class LambdaDeployer {
@@ -24,12 +32,12 @@ export class LambdaDeployer {
    */
   static deployLambdas(scope: Construct, lambdaArtifactBucket: IBucket) {
     // Resolve the directory containing the Lambda configuration files.
-    const configDir = path.resolve(__dirname, "../config/lambda/");
+    const configDir = resolve(__dirname, "../config/lambda/");
 
     // Read and filter the configuration files, excluding any that are disabled.
-    const files = fs
-      .readdirSync(configDir)
-      .filter((file) => file.endsWith(".json") && !file.includes("disabled"));
+    const files = readdirSync(configDir).filter(
+      (file) => file.endsWith(".json") && !file.includes("disabled")
+    );
 
     // If no valid configuration files are found, log a message and skip deployment.
     if (files.length === 0) {
@@ -42,12 +50,10 @@ export class LambdaDeployer {
 
     // Iterate over each configuration file and deploy the corresponding Lambda function.
     files.forEach((file) => {
-      const filePath = path.join(configDir, file);
+      const filePath = join(configDir, file);
 
       // Read and parse the configuration file.
-      const config: LambdaConfig = JSON.parse(
-        fs.readFileSync(filePath, "utf-8")
-      );
+      const config: LambdaConfig = JSON.parse(readFileSync(filePath, "utf-8"));
 
       // Map the runtime string to the corresponding Runtime enum.
       const runtime = (Runtime as any)[config.runtime];
@@ -55,6 +61,35 @@ export class LambdaDeployer {
       // Throw an error if the runtime is invalid.
       if (!runtime) {
         throw new Error(`Invalid runtime specified: ${config.runtime}`);
+      }
+
+      // Resolve the VPC and security groups if specified.
+      let vpc;
+      if (config.vpc) {
+        vpc = Vpc.fromLookup(scope, `${config.functionName}Vpc`, {
+          vpcId: config.vpc,
+        });
+      }
+
+      let securityGroups: ISecurityGroup[] = [];
+      if (config.securityGroups) {
+        securityGroups = config.securityGroups.map((sgId) =>
+          SecurityGroup.fromSecurityGroupId(
+            scope,
+            `${config.functionName}SG-${sgId}`,
+            sgId
+          )
+        );
+      }
+
+      // Resolve the IAM role if specified.
+      let role: IRole | undefined;
+      if (config.roleArn) {
+        role = Role.fromRoleArn(
+          scope,
+          `${config.functionName}Role`,
+          config.roleArn
+        );
       }
 
       // Deploy the Lambda function using the specified configuration.
@@ -66,6 +101,11 @@ export class LambdaDeployer {
         description: config.description,
         memorySize: config.memorySize,
         environment: config.environment,
+        timeout: config.timeout ? Duration.seconds(config.timeout) : undefined,
+        vpc: vpc,
+        securityGroups: securityGroups.length > 0 ? securityGroups : undefined,
+        role: role,
+        logRetention: config.logRetention,
       });
     });
   }

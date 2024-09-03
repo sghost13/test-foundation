@@ -5,8 +5,13 @@
   "s3Key": "template-lambda.zip",
   "description": "This template lambda is disabled, and will not be deployed.",
   "memorySize": 128,
+  "timeout": 60,
   "environment": {
     "NODE_ENV": "example",
     "API_ENDPOINT": "https://api.example.com"
-  }
+  },
+  "vpc": "vpc-12345678",
+  "securityGroups": ["sg-12345678", "sg-87654321"],
+  "roleArn": "arn:aws:iam::123456789012:role/lambda-execution-role",
+  "logRetention": 7
 }
