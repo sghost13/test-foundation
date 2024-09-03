@@ -6,13 +6,13 @@ import { IBucket } from "aws-cdk-lib/aws-s3";
 
 // Interface for Lambda configuration, used to type-check the JSON config files.
 interface LambdaConfig {
-  functionName: string; // The name of the Lambda function.
-  handler: string; // The function handler.
-  runtime: string; // Runtime as a string, will be mapped to Runtime enum.
-  s3Key: string; // S3 key where the Lambda code artifact is stored.
-  description?: string; // Optional description for the Lambda function.
-  memorySize?: number; // Optional memory size for the Lambda function.
-  environment?: { [key: string]: string }; // Optional environment variables for the Lambda function.
+  functionName: string;
+  handler: string;
+  runtime: string;
+  s3Key: string;
+  description?: string;
+  memorySize?: number;
+  environment?: { [key: string]: string };
 }
 
 export class LambdaDeployer {
