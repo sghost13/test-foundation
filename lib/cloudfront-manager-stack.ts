@@ -17,7 +17,7 @@ import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
 import path = require("path");
 
-// Cloudfront Deployer Stack
+// Cloudfront Manager Stack
 // This stack's purpose is to deploy *all* CloudFront distributions
 
 export class CloudfrontManagerStack extends Stack {
