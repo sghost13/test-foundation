@@ -68,14 +68,16 @@ export class LambdaManagerStack extends Stack {
 
     // Grant the lambdaUpdater lambda role a policy to allow it to update lambda code
     // AWS automatically creates a role for lambdas to assume, we just want to add policy permissions to it
-    //TODO refine this policy to only needed permissions
     lambdaUpdater.role?.attachInlinePolicy(
       new Policy(this, "lambda-updater-policy", {
         statements: [
           new PolicyStatement({
-            actions: ["lambda:*"],
+            actions: [
+              "lambda:UpdateFunctionCode", // Allow updating Lambda code
+              "lambda:ListFunctions", // Allow listing all functions in the account
+            ],
             resources: [
-              `arn:aws:lambda:${this.region}:${this.account}:function:*`,
+              `arn:aws:lambda:${this.region}:${this.account}:function:*`, // Restrict to functions in this account and region
             ],
           }),
         ],
